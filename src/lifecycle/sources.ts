@@ -40,6 +40,12 @@ function referenceIssues(manifest: SourceManifest, matrices: readonly SourceUser
     .filter((issue) => issue !== undefined);
 }
 
+/** An approved manifest vouches for its sources; one still UNVERIFIED (e.g. after a rehash) contradicts it. */
+function unverifiedIssues(manifest: SourceManifest): string[] {
+  if (manifest.approval.status !== "APPROVED") return [];
+  return manifest.sources.filter((s) => s.status === "UNVERIFIED").map((s) => `source '${s.id}' is UNVERIFIED in an approved manifest`);
+}
+
 /**
  * Phase 0: every expectation the engine enforces must trace back to a
  * verified, approved, unchanged source. Nothing here invents an expectation.
@@ -49,7 +55,13 @@ export async function checkSources(manifest: SourceManifest, manifestDir: string
   const pinned = await Promise.all(manifest.sources.map(async (s) => ({ id: s.id, issue: await pinnedFileIssue(s, manifestDir) })));
   const changed = pinned.flatMap((p) => (p.issue === undefined ? [] : [{ id: p.id, issue: p.issue }]));
   const assumptions = manifest.assumptions.filter((a) => !a.resolved).map((a) => `assumption '${a.id}' is unresolved: ${a.statement}`);
-  const issues = [...approval, ...changed.map((p) => p.issue), ...referenceIssues(manifest, matrices), ...assumptions];
+  const issues = [
+    ...approval,
+    ...unverifiedIssues(manifest),
+    ...changed.map((p) => p.issue),
+    ...referenceIssues(manifest, matrices),
+    ...assumptions,
+  ];
   return { approved: issues.length === 0, issues, changedSources: changed.map((p) => p.id) };
 }
 

@@ -67,6 +67,15 @@ describe("Phase 0 sources", () => {
     expect(next.sources[0]).toMatchObject({ status: "UNVERIFIED", sha256: sha256("rule 1 (edited)") });
   });
 
+  it("an approved manifest cannot keep an UNVERIFIED source, even one no matrix references", async () => {
+    const { dir, manifest } = await setup("UNVERIFIED");
+    const check = await checkSources(manifest, dir, []);
+    expect(check.issues).toEqual(["source 'policy' is UNVERIFIED in an approved manifest"]);
+    expect((await checkSources({ ...manifest, approval: { status: "PENDING" } }, dir, [])).issues).toEqual([
+      "source manifest 'm' is PENDING, not APPROVED",
+    ]);
+  });
+
   it("flags wrong revisions, unverified sources, unknown sources and open assumptions", async () => {
     const { dir, manifest } = await setup("ASSUMPTION");
     const withAssumption = { ...manifest, assumptions: [{ id: "a1", statement: "admins see all", resolved: false }] };
