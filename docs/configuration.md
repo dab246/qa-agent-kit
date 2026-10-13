@@ -46,6 +46,21 @@ See `examples/minimal-permission-suite/qa-agent-kit.yaml`. Main sections:
 Required `manual-e2e` cases need a PASS in `manual-results.yaml`; required
 `automated` cases must link to automated results that PASS (traceability).
 
+Links are test keys `lane:suite:test`. Several links may share a line
+(comma-separated) and `- Automation:` may repeat, one link per line, which is
+how to link a test whose name contains a comma. A trailing `*` links every
+test whose key starts with the text before it, e.g. a whole `describe` block:
+
+```markdown
+- Automation: unit:src/__tests__/report.test.ts:aggregateWeeklyTasks > *
+```
+
+The pattern must match at least one result, and every match must PASS.
+For JUnit lanes the suite is the `<testsuite name>` and the test is the
+`<testcase name>`, prefixed with `classname.` only when the classname differs
+from the suite name (Vitest and Jest repeat the file path, so the test is just
+the name). Run `qa-agent-kit run` once and read `run.json` to copy exact keys.
+
 ## Phase 0 source manifest
 
 Each source has a `revision` and `status` (`VERIFIED`, `ASSUMPTION`,

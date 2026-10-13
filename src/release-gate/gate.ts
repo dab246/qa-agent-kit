@@ -278,16 +278,28 @@ function checkManualE2E(input: GateInput, add: AddReason): void {
   for (const tc of required) checkManualCase(tc, latest.get(tc.id), input.commitSha, add);
 }
 
-function checkLinkedTest(tc: TestCase, key: string, r: TestResult | undefined, add: AddReason): void {
-  if (!r) add("amber", "TRACEABILITY_GAP", `${tc.id} links ${key}, which produced no result`);
-  else if (r.status === "FAIL") add("red", "LINKED_TEST_FAILED", `${tc.id} → ${key} failed`, key);
-  else if (r.status !== "PASS") add("amber", "LINKED_TEST_NOT_PASSED", `${tc.id} → ${key} is ${r.status}`, key);
+/** Results a test-case link covers: one exact key, or every key with the prefix before a trailing `*`. */
+function linkedResults(link: string, byKey: ResultIndex): TestResult[] {
+  if (!link.endsWith("*")) {
+    const exact = byKey.get(link);
+    return exact ? [exact] : [];
+  }
+  const prefix = link.slice(0, -1);
+  return [...byKey.entries()].filter(([key]) => key.startsWith(prefix)).map(([, r]) => r);
+}
+
+function checkLinkedTest(tc: TestCase, link: string, results: readonly TestResult[], add: AddReason): void {
+  const failed = results.find((r) => r.status === "FAIL");
+  const notPassed = results.find((r) => r.status !== "PASS");
+  if (results.length === 0) add("amber", "TRACEABILITY_GAP", `${tc.id} links ${link}, which produced no result`);
+  else if (failed) add("red", "LINKED_TEST_FAILED", `${tc.id} → ${testKey(failed)} failed`, testKey(failed));
+  else if (notPassed) add("amber", "LINKED_TEST_NOT_PASSED", `${tc.id} → ${testKey(notPassed)} is ${notPassed.status}`, testKey(notPassed));
 }
 
 function checkTraceability(input: GateInput, byKey: ResultIndex, add: AddReason): void {
   const automated = input.manual.cases.filter((c) => c.required && c.type === "automated");
   for (const tc of automated) {
     if (tc.automation.length === 0) add("amber", "TRACEABILITY_GAP", `${tc.id} is 'automated' but links no automated test`);
-    for (const key of tc.automation) checkLinkedTest(tc, key, byKey.get(key), add);
+    for (const link of tc.automation) checkLinkedTest(tc, link, linkedResults(link, byKey), add);
   }
 }

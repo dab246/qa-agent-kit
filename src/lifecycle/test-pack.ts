@@ -13,6 +13,7 @@ import { IdSchema } from "../core/schemas.js";
  *   - Priority: P1
  *   - Required: yes
  *   - Automation: permission:admin-settings:admin-update-global-settings
+ *   - Automation: unit:src/report.test.ts:aggregate > *   (trailing `*`: every test with that prefix)
  *   ### Steps / ### Expected …
  */
 export const TC_TYPES = ["manual-e2e", "automated", "review"] as const;
@@ -70,7 +71,8 @@ const META: Record<string, (d: Draft, entry: MetaEntry) => string | undefined> =
   lane: (d, { value }) => void (d.lane = value),
   priority: (d, { value }) => void (d.priority = value),
   required: (d, { value }) => void (d.required = ["yes", "true", "y"].includes(value.toLowerCase())),
-  automation: (d, { value }) => void (d.automation = value.split(",").map((v) => v.trim()).filter(isListItem)),
+  // Repeated `- Automation:` lines add up, so test names that contain commas can each get their own line.
+  automation: (d, { value }) => void (d.automation = [...(d.automation ?? []), ...value.split(",").map((v) => v.trim()).filter(isListItem)]),
 };
 
 /** `## TC-ID: Title` heading → new draft, or an issue for an invalid id. */
