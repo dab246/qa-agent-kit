@@ -245,7 +245,7 @@ function checkRouteDecisions(route: RouteRecord, rules: ReleasePolicy["lifecycle
   if (rules.requireCostValueGo && route.costValue.decision !== "GO") add("amber", "COST_VALUE_NOT_GO", `cost/value decision is ${route.costValue.decision}`);
 }
 
-function latestManualResults(results: readonly ManualResult[]): Map<string, ManualResult> {
+export function latestManualResults(results: readonly ManualResult[]): Map<string, ManualResult> {
   const latest = new Map<string, ManualResult>();
   const isNewer = (r: ManualResult, prev: ManualResult | undefined): boolean => !prev || Date.parse(r.executedAt) >= Date.parse(prev.executedAt);
   for (const r of results) {

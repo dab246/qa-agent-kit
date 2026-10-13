@@ -1,5 +1,5 @@
 import { testKey, type TestResult } from "../core/schemas.js";
-import type { ReleaseGateResult } from "../release-gate/gate.js";
+import { latestManualResults, type ReleaseGateResult } from "../release-gate/gate.js";
 import { PERMISSION_LANE } from "../permission/driver.js";
 import { expectsDenial } from "../permission/classify.js";
 import type { RunRecord } from "./run-record.js";
@@ -59,6 +59,12 @@ function actorMatrix(results: readonly TestResult[]): string[] {
   return lines;
 }
 
+function planText(record: RunRecord): string {
+  if (record.matrices.length === 0) return "no permission matrices; lanes and lifecycle only";
+  const selected = record.plan.matrices.map((m) => `\`${md(m)}\``).join(", ");
+  return record.plan.mode === "all" ? "all matrices" : `selected: ${selected || "none"}`;
+}
+
 export interface MarkdownOptions {
   /** Short form for PR comments / step summaries: gate and failures only. */
   compact?: boolean;
@@ -66,148 +72,146 @@ export interface MarkdownOptions {
   evidenceBaseUrl?: string;
 }
 
-export function renderMarkdown(record: RunRecord, gate: ReleaseGateResult, options: MarkdownOptions = {}): string {
-  const lines: string[] = [];
+const code = (text: string | undefined, max = 120): string => (text ? `\`${md(text, max)}\`` : "");
+const by = (who: string | undefined): string => (who ? ` (${md(who)})` : "");
+
+function headerSection(record: RunRecord, gate: ReleaseGateResult): string[] {
   const pr = record.pullRequest;
-  lines.push(
+  const counts = Object.entries(gate.counts).filter(([, n]) => n > 0).map(([s, n]) => `${s} ${n}`);
+  const source = pr && [md(pr.provider), md(pr.id), pr.title && `— ${md(pr.title, 120)}`].filter(Boolean).join(" ");
+  return [
     `# QA release gate: ${VERDICT_ICON[gate.verdict]} ${gate.decision} (${gate.verdict})`,
     "",
     "| | |",
     "| --- | --- |",
-    `| Project | \`${md(record.project.id)}\` · env \`${md(record.project.environment)}\` |`,
-    `| Commit | \`${md(record.commitSha, 64)}\` |`,
-    ...(pr ? [`| Source | ${[md(pr.provider), md(pr.id), pr.title && `— ${md(pr.title, 120)}`].filter(Boolean).join(" ")} |`] : []),
-    `| Run | \`${md(record.runId)}\` · kit ${md(record.kitVersion)} · policy ${md(gate.policyVersion)} |`,
-    `| Plan | ${record.plan.mode === "all" ? "all matrices" : `selected: ${record.plan.matrices.map((m) => `\`${md(m)}\``).join(", ")}`} |`,
-    `| Results | ${Object.entries(gate.counts)
-      .filter(([, n]) => n > 0)
-      .map(([s, n]) => `${s} ${n}`)
-      .join(" · ") || "none"} |`,
+    `| Project | ${code(record.project.id)} · env ${code(record.project.environment)} |`,
+    `| Commit | ${code(record.commitSha, 64)} |`,
+    ...(source ? [`| Source | ${source} |`] : []),
+    `| Run | ${code(record.runId)} · kit ${md(record.kitVersion)} · policy ${md(gate.policyVersion)} |`,
+    `| Plan | ${planText(record)} |`,
+    `| Results | ${counts.join(" · ") || "none"} |`,
     "",
-  );
+  ];
+}
 
+function reasonsSection(gate: ReleaseGateResult): string[] {
   const blocking = gate.reasons.filter((r) => r.level !== "warn");
+  if (blocking.length === 0) return ["All mandatory gate conditions are satisfied.", ""];
+  const rows = blocking.map((r) => `| ${LEVEL_ICON[r.level]} | ${r.code} | ${code(r.testKey)} | ${md(r.message)} |`);
+  return ["## Blocking reasons", "", "| | Code | Test | Detail |", "| --- | --- | --- | --- |", ...rows, ""];
+}
+
+/** A titled bullet list, or nothing when there are no items. */
+function listSection(title: string, items: readonly string[]): string[] {
+  return items.length === 0 ? [] : [`## ${title}`, "", ...items.map((i) => `- ${i}`), ""];
+}
+
+function warningsSection(gate: ReleaseGateResult): string[] {
   const warnings = gate.reasons.filter((r) => r.level === "warn");
-  if (blocking.length > 0) {
-    lines.push("## Blocking reasons", "", "| | Code | Test | Detail |", "| --- | --- | --- | --- |");
-    for (const r of blocking) {
-      lines.push(`| ${LEVEL_ICON[r.level]} | ${r.code} | ${r.testKey ? `\`${md(r.testKey, 120)}\`` : ""} | ${md(r.message)} |`);
-    }
-    lines.push("");
-  } else {
-    lines.push("All mandatory gate conditions are satisfied.", "");
-  }
-  if (warnings.length > 0) {
-    lines.push("## Warnings (non-blocking)", "");
-    for (const w of warnings) lines.push(`- ${w.code}${w.testKey ? ` \`${md(w.testKey, 120)}\`` : ""}: ${md(w.message)}`);
-    lines.push("");
-  }
-  if (gate.waived.length > 0) {
-    lines.push("## Approved exceptions", "");
-    for (const w of gate.waived) {
-      lines.push(`- \`${md(w.testKey, 120)}\` by ${md(w.approvedBy, 80)} until ${md(w.expiresAt, 40)}: ${md(w.reason)}`);
-    }
-    lines.push("");
-  }
+  const items = warnings.map((w) => `${w.code}${w.testKey ? ` ${code(w.testKey)}` : ""}: ${md(w.message)}`);
+  const waivers = gate.waived.map((w) => `${code(w.testKey)} by ${md(w.approvedBy, 80)} until ${md(w.expiresAt, 40)}: ${md(w.reason)}`);
+  return [...listSection("Warnings (non-blocking)", items), ...listSection("Approved exceptions", waivers)];
+}
 
-  if (options.compact) {
-    lines.push("_Full report, evidence and JUnit XML are in the run artifacts._", "");
-    return lines.join("\n");
-  }
-
-  lines.push(...actorMatrix(record.results));
-
+function groupBySuite(results: readonly TestResult[]): Map<string, TestResult[]> {
   const bySuite = new Map<string, TestResult[]>();
-  for (const r of record.results) {
+  for (const r of results) {
     const key = `${r.lane}:${r.suiteId}`;
     bySuite.set(key, [...(bySuite.get(key) ?? []), r]);
   }
+  return bySuite;
+}
+
+function resultRow(r: TestResult, evidence: (ref: string) => string): string {
+  const cells = [
+    code(r.testId),
+    r.required ? "yes" : "no",
+    r.actorRef ? `${md(r.actorRef, 60)} (${md(r.role ?? "?", 60)})` : "—",
+    code(r.operationId, 80) || "—",
+    expectedText(r),
+    actualText(r),
+    `**${r.status}**${r.category ? ` ${r.category}` : ""}`,
+    md(r.evidenceError ? `evidence error: ${r.evidenceError}` : r.failureReason, 200),
+    r.evidenceRefs.map(evidence).join("<br>") || "—",
+  ];
+  return `| ${cells.join(" | ")} |`;
+}
+
+function resultsSection(record: RunRecord, options: MarkdownOptions): string[] {
   const evidence = (ref: string): string =>
-    options.evidenceBaseUrl ? `[${md(ref, 200)}](${options.evidenceBaseUrl}/${encodeURI(ref)})` : `\`${md(ref, 200)}\``;
-  for (const [suite, items] of bySuite) {
-    lines.push(
-      `## ${md(suite, 120)}`,
-      "",
-      "| Test | Req | Actor (role) | Operation | Expected | Actual | Status | Detail | Evidence |",
-      "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
-    );
-    for (const r of items) {
-      lines.push(
-        [
-          "",
-          `\`${md(r.testId, 120)}\``,
-          r.required ? "yes" : "no",
-          r.actorRef ? `${md(r.actorRef, 60)} (${md(r.role ?? "?", 60)})` : "—",
-          r.operationId ? `\`${md(r.operationId, 80)}\`` : "—",
-          expectedText(r),
-          actualText(r),
-          `**${r.status}**${r.category ? ` ${r.category}` : ""}`,
-          md(r.evidenceError ? `evidence error: ${r.evidenceError}` : r.failureReason, 200),
-          r.evidenceRefs.map(evidence).join("<br>") || "—",
-          "",
-        ].join(" | ").trim(),
-      );
-    }
-    lines.push("");
-  }
+    options.evidenceBaseUrl ? `[${md(ref, 200)}](${options.evidenceBaseUrl}/${encodeURI(ref)})` : code(ref, 200);
+  const header = ["| Test | Req | Actor (role) | Operation | Expected | Actual | Status | Detail | Evidence |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"];
+  return [...groupBySuite(record.results)].flatMap(([suite, items]) => [
+    `## ${md(suite, 120)}`,
+    "",
+    ...header,
+    ...items.map((r) => resultRow(r, evidence)),
+    "",
+  ]);
+}
 
-  const lifecycleFailures = record.lifecycle.filter((e) => !e.ok);
-  if (lifecycleFailures.length > 0) {
-    lines.push("## Setup and teardown failures", "");
-    for (const e of lifecycleFailures) {
-      lines.push(`- ${e.phase} \`${md(e.ref, 80)}\` (matrix \`${md(e.matrixId, 80)}\`): ${md(e.error)}`);
-    }
-    lines.push("");
-  }
-
-  lines.push(
+function sourcesSection(record: RunRecord): string[] {
+  const failures = record.lifecycle.filter((e) => !e.ok).map((e) => `${e.phase} ${code(e.ref, 80)} (matrix ${code(e.matrixId, 80)}): ${md(e.error)}`);
+  const matrices = record.matrices.map((m) => `- matrix ${code(m.matrixId)} v${m.version} ← ${m.sourceRefs.map((s) => `${md(s.id)}@${md(s.revision, 60)}`).join(", ")}`);
+  const status = record.sources.approved ? "approved and unchanged" : "**not approved**";
+  return [
+    ...listSection("Setup and teardown failures", failures),
     "## Sources (Phase 0)",
     "",
-    `Manifest \`${md(record.sources.manifestId)}\`: ${record.sources.approved ? "approved and unchanged" : "**not approved**"}`,
+    `Manifest ${code(record.sources.manifestId)}: ${status}`,
     "",
-  );
-  for (const issue of record.sources.issues) lines.push(`- ${md(issue)}`);
-  if (record.sources.issues.length > 0) lines.push("");
-  for (const m of record.matrices) {
-    lines.push(`- matrix \`${md(m.matrixId)}\` v${m.version} ← ${m.sourceRefs.map((s) => `${md(s.id)}@${md(s.revision, 60)}`).join(", ")}`);
-  }
-  lines.push("");
+    ...record.sources.issues.map((i) => `- ${md(i)}`),
+    ...matrices,
+    "",
+  ];
+}
 
-  if (record.route) {
-    const r = record.route;
-    lines.push(
-      "## Route (S0)",
-      "",
-      `Path ${md(r.path)} · owner ${md(r.owner)} · risk ${r.risk} · lanes ${r.lanes.map((l) => md(l)).join(", ")}`,
-      "",
-      `- Intake: ${r.intake.status}${r.intake.decidedBy ? ` (${md(r.intake.decidedBy)})` : ""}`,
-      `- Cost/value: ${r.costValue.decision}${r.costValue.decidedBy ? ` (${md(r.costValue.decidedBy)})` : ""}`,
-      ...r.gaps.map((g) => `- Gap: ${md(g)}`),
-      "",
-    );
-  }
+function routeSection(record: RunRecord): string[] {
+  const r = record.route;
+  if (!r) return [];
+  return [
+    "## Route (S0)",
+    "",
+    `Path ${md(r.path)} · owner ${md(r.owner)} · risk ${r.risk} · lanes ${r.lanes.map((l) => md(l)).join(", ")}`,
+    "",
+    `- Intake: ${r.intake.status}${by(r.intake.decidedBy)}`,
+    `- Cost/value: ${r.costValue.decision}${by(r.costValue.decidedBy)}`,
+    ...r.gaps.map((g) => `- Gap: ${md(g)}`),
+    "",
+  ];
+}
 
-  const manualCases = record.manual.cases.filter((c) => c.type === "manual-e2e");
-  if (manualCases.length > 0) {
-    const latest = new Map(record.manual.results.map((r) => [r.tcId, r]));
-    lines.push("## Manual E2E (Phase 1)", "", "| Test case | Required | Result | Tester |", "| --- | --- | --- | --- |");
-    for (const tc of manualCases) {
-      const r = latest.get(tc.id);
-      lines.push(`| \`${md(tc.id)}\` ${md(tc.title, 80)} | ${tc.required ? "yes" : "no"} | ${r?.status ?? "NOT_RUN"} | ${md(r?.tester ?? "—", 60)} |`);
-    }
-    lines.push("");
-  }
+function manualSection(record: RunRecord): string[] {
+  const cases = record.manual.cases.filter((c) => c.type === "manual-e2e");
+  if (cases.length === 0) return [];
+  const latest = latestManualResults(record.manual.results);
+  const rows = cases.map((tc) => {
+    const r = latest.get(tc.id);
+    return `| ${code(tc.id)} ${md(tc.title, 80)} | ${tc.required ? "yes" : "no"} | ${r?.status ?? "NOT_RUN"} | ${md(r?.tester ?? "—", 60)} |`;
+  });
+  return ["## Manual E2E (Phase 1)", "", "| Test case | Required | Result | Tester |", "| --- | --- | --- | --- |", ...rows, ""];
+}
 
-  const requiredMissing = record.plan.requiredKeys.filter((k) => !record.results.some((r) => testKey(r) === k));
-  if (requiredMissing.length > 0) {
-    lines.push("## Planned but not executed", "", ...requiredMissing.map((k) => `- \`${md(k, 120)}\``), "");
-  }
+function missingSection(record: RunRecord): string[] {
+  const executed = new Set(record.results.map(testKey));
+  const missing = record.plan.requiredKeys.filter((k) => !executed.has(k)).map((k) => code(k));
+  return listSection("Planned but not executed", missing);
+}
 
-  lines.push(
+export function renderMarkdown(record: RunRecord, gate: ReleaseGateResult, options: MarkdownOptions = {}): string {
+  const summary = [...headerSection(record, gate), ...reasonsSection(gate), ...warningsSection(gate)];
+  if (options.compact) return [...summary, "_Full report, evidence and JUnit XML are in the run artifacts._", ""].join("\n");
+  return [
+    ...summary,
+    ...actorMatrix(record.results),
+    ...resultsSection(record, options),
+    ...sourcesSection(record),
+    ...routeSection(record),
+    ...manualSection(record),
+    ...missingSection(record),
     "---",
     "",
     `Generated ${md(gate.evaluatedAt)} by qa-agent-kit ${md(record.kitVersion)}. PASS/FAIL and the gate decision come from the deterministic engine and policy only.`,
     "",
-  );
-  return lines.join("\n");
+  ].join("\n");
 }
