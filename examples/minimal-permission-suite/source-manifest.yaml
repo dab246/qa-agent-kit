@@ -1,0 +1,21 @@
+# Phase 0: every expectation the engine enforces traces back to a verified,
+# approved, unchanged source. Editing a pinned file re-opens Phase 0.
+schemaVersion: 1
+manifestId: settings-sources
+sources:
+  - id: authorization-policy
+    type: policy
+    revision: "2026-10-01"
+    status: VERIFIED
+    path: sources/authorization-policy.md
+    sha256: 5f10074cddb858993afed4670b6081e4504e631d812b5da2e1a58aa8a6da2892
+assumptions:
+  - id: admin-sees-all-projects
+    statement: Administrators can read every project (policy rule 4).
+    owner: qa-lead
+    resolved: true
+approval:
+  status: APPROVED
+  approvedBy: qa-lead
+  approvedAt: "2026-10-01"
+  reference: review of authorization policy 2026-10-01

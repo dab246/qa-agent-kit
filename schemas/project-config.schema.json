@@ -1,0 +1,360 @@
+{
+  "$id": "https://qa-agent-kit.local/schemas/project-config.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "project": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "environment": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        }
+      },
+      "required": [
+        "id",
+        "environment"
+      ],
+      "additionalProperties": false
+    },
+    "safety": {
+      "default": {
+        "allowedEnvironments": [
+          "local",
+          "test",
+          "staging"
+        ]
+      },
+      "type": "object",
+      "properties": {
+        "allowedEnvironments": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          }
+        },
+        "allowedHosts": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "allowedEnvironments"
+      ],
+      "additionalProperties": false
+    },
+    "sources": {
+      "type": "object",
+      "properties": {
+        "manifest": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "manifest"
+      ],
+      "additionalProperties": false
+    },
+    "routing": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "route": {
+          "type": "string",
+          "minLength": 1
+        },
+        "paths": {
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "description": {
+                "type": "string"
+              },
+              "lanes": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                }
+              }
+            },
+            "required": [
+              "description",
+              "lanes"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "permission": {
+      "type": "object",
+      "properties": {
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "matrices": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "execution": {
+          "default": {},
+          "type": "object",
+          "properties": {
+            "defaultTimeoutMs": {
+              "default": 10000,
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 600000
+            },
+            "cleanupTimeoutMs": {
+              "default": 30000,
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 600000
+            },
+            "stopOnCriticalViolation": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "target",
+        "matrices"
+      ],
+      "additionalProperties": false
+    },
+    "testPacks": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "files": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "manualResults": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "lanes": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "junit": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": {
+            "default": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "junit"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "impact": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "rules": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "paths": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "matrices": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                }
+              },
+              "lanes": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                }
+              }
+            },
+            "required": [
+              "paths"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "alwaysRun": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          }
+        },
+        "onUnmatched": {
+          "default": "run-all",
+          "type": "string",
+          "enum": [
+            "run-all",
+            "ignore"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "directory": {
+          "default": "artifacts/qa",
+          "type": "string",
+          "minLength": 1
+        },
+        "includeResponseBodies": {
+          "default": false,
+          "type": "boolean"
+        },
+        "maxBodyBytes": {
+          "default": 16384,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "redactHeaders": {
+          "default": [
+            "authorization",
+            "cookie",
+            "set-cookie",
+            "x-api-key",
+            "proxy-authorization"
+          ],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "redactFields": {
+          "default": [
+            "password",
+            "passwd",
+            "secret",
+            "token",
+            "apikey",
+            "api_key",
+            "authorization",
+            "cookie",
+            "session",
+            "credential",
+            "otp"
+          ],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "releaseGate": {
+      "type": "object",
+      "properties": {
+        "policy": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "policy"
+      ],
+      "additionalProperties": false
+    },
+    "ai": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "type": "boolean"
+        },
+        "proposalsDirectory": {
+          "default": "proposals/pending",
+          "type": "string"
+        },
+        "allowChangeApprovedMatrix": {
+          "default": false,
+          "type": "boolean",
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "project",
+    "sources",
+    "releaseGate"
+  ],
+  "additionalProperties": false
+}

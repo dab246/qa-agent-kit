@@ -1,0 +1,821 @@
+{
+  "$id": "https://qa-agent-kit.local/schemas/run-record.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "kitVersion": {
+      "type": "string"
+    },
+    "runId": {
+      "type": "string"
+    },
+    "project": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "environment": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "environment"
+      ],
+      "additionalProperties": false
+    },
+    "commitSha": {
+      "type": "string"
+    },
+    "pullRequest": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "baseSha": {
+          "type": "string"
+        },
+        "headSha": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider"
+      ],
+      "additionalProperties": false
+    },
+    "startedAt": {
+      "type": "string"
+    },
+    "finishedAt": {
+      "type": "string"
+    },
+    "plan": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "all",
+            "selected"
+          ]
+        },
+        "matrices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "requiredKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "changedFiles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "mode",
+        "matrices",
+        "reasons",
+        "requiredKeys"
+      ],
+      "additionalProperties": false
+    },
+    "matrices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "matrixId": {
+            "type": "string"
+          },
+          "version": {
+            "type": "number"
+          },
+          "sourceRefs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                },
+                "revision": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "id",
+                "revision"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "matrixId",
+          "version",
+          "sourceRefs"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "sources": {
+      "type": "object",
+      "properties": {
+        "manifestId": {
+          "type": "string"
+        },
+        "approved": {
+          "type": "boolean"
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "changedSources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "manifestId",
+        "approved",
+        "issues",
+        "changedSources"
+      ],
+      "additionalProperties": false
+    },
+    "route": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "routeId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": "string"
+        },
+        "risk": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+        "lanes": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          }
+        },
+        "gaps": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "intake": {
+          "type": "object",
+          "properties": {
+            "decidedBy": {
+              "type": "string",
+              "minLength": 1
+            },
+            "decidedAt": {
+              "type": "string"
+            },
+            "rationale": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "ACCEPTED",
+                "PENDING",
+                "REJECTED"
+              ]
+            }
+          },
+          "required": [
+            "status"
+          ],
+          "additionalProperties": false
+        },
+        "costValue": {
+          "type": "object",
+          "properties": {
+            "decidedBy": {
+              "type": "string",
+              "minLength": 1
+            },
+            "decidedAt": {
+              "type": "string"
+            },
+            "rationale": {
+              "type": "string"
+            },
+            "decision": {
+              "type": "string",
+              "enum": [
+                "GO",
+                "PENDING",
+                "NO_GO"
+              ]
+            }
+          },
+          "required": [
+            "decision"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "routeId",
+        "path",
+        "owner",
+        "risk",
+        "lanes",
+        "gaps",
+        "intake",
+        "costValue"
+      ],
+      "additionalProperties": false
+    },
+    "manual": {
+      "type": "object",
+      "properties": {
+        "cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "manual-e2e",
+                  "automated",
+                  "review"
+                ]
+              },
+              "lane": {
+                "type": "string"
+              },
+              "priority": {
+                "type": "string"
+              },
+              "required": {
+                "type": "boolean"
+              },
+              "automation": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "file": {
+                "type": "string"
+              },
+              "line": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "type",
+              "lane",
+              "priority",
+              "required",
+              "automation",
+              "file",
+              "line"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "results": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "tcId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "PASS",
+                  "FAIL",
+                  "BLOCKED",
+                  "NOT_RUN"
+                ]
+              },
+              "tester": {
+                "type": "string",
+                "minLength": 1
+              },
+              "executedAt": {
+                "type": "string",
+                "minLength": 1
+              },
+              "commitSha": {
+                "type": "string"
+              },
+              "environment": {
+                "type": "string"
+              },
+              "evidence": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "notes": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tcId",
+              "status",
+              "tester",
+              "executedAt",
+              "evidence"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "cases",
+        "results"
+      ],
+      "additionalProperties": false
+    },
+    "lifecycle": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "matrixId": {
+            "type": "string"
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "seed",
+              "actor",
+              "cleanup",
+              "dispose"
+            ]
+          },
+          "ref": {
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "matrixId",
+          "phase",
+          "ref",
+          "ok"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "missingLaneReports": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "lane": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          },
+          "suiteId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "suiteVersion": {
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "testId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PASS",
+              "FAIL",
+              "BLOCKED",
+              "INCONCLUSIVE",
+              "SKIPPED",
+              "NOT_APPLICABLE"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "PRIVILEGE_ESCALATION",
+              "DATA_DISCLOSURE",
+              "UNEXPECTED_DENIAL",
+              "STATUS_MISMATCH",
+              "ERROR_CODE_MISMATCH",
+              "ASSERTION_FAILED",
+              "TEST_FAILED",
+              "TIMEOUT",
+              "EXECUTION_ERROR",
+              "SEED_FAILED",
+              "ACTOR_UNAVAILABLE",
+              "ACTOR_MISMATCH",
+              "CANCELLED",
+              "NO_EXPECTATION",
+              "UNRESOLVED_REFERENCE",
+              "BODY_INCOMPLETE",
+              "STOPPED_AFTER_CRITICAL",
+              "SOURCES_NOT_APPROVED",
+              "SKIPPED_BY_RUNNER"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "critical",
+              "high",
+              "normal"
+            ]
+          },
+          "actorRef": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "operationId": {
+            "type": "string"
+          },
+          "resourceRef": {
+            "type": "string"
+          },
+          "expected": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "http"
+                  },
+                  "status": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 100,
+                        "maximum": 599
+                      },
+                      {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": 100,
+                          "maximum": 599
+                        }
+                      }
+                    ]
+                  },
+                  "assertions": {
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "json-equals"
+                            },
+                            "path": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "expected": {}
+                          },
+                          "required": [
+                            "kind",
+                            "path",
+                            "expected"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "json-exists"
+                            },
+                            "path": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "path"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "json-not-exists"
+                            },
+                            "path": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "path"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "kind",
+                  "status",
+                  "assertions"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "error"
+                  },
+                  "code": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "assertions": {
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "json-equals"
+                            },
+                            "path": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "expected": {}
+                          },
+                          "required": [
+                            "kind",
+                            "path",
+                            "expected"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "json-exists"
+                            },
+                            "path": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "path"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "json-not-exists"
+                            },
+                            "path": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "path"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "kind",
+                  "code",
+                  "assertions"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "actual": {
+            "type": "object",
+            "properties": {
+              "httpStatus": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "errorCode": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "startedAt": {
+            "type": "string"
+          },
+          "finishedAt": {
+            "type": "string"
+          },
+          "durationMs": {
+            "type": "number",
+            "minimum": 0
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "evidenceError": {
+            "type": "string"
+          },
+          "failureReason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "runId",
+          "lane",
+          "suiteId",
+          "testId",
+          "required",
+          "status",
+          "severity",
+          "startedAt",
+          "finishedAt",
+          "durationMs",
+          "evidenceRefs"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "evidenceIndex": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ref": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "ref",
+          "sha256",
+          "bytes"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "kitVersion",
+    "runId",
+    "project",
+    "commitSha",
+    "startedAt",
+    "finishedAt",
+    "plan",
+    "matrices",
+    "sources",
+    "manual",
+    "lifecycle",
+    "missingLaneReports",
+    "results",
+    "evidenceIndex"
+  ],
+  "additionalProperties": false
+}

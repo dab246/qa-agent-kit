@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Output of the UI lane (e.g. Playwright's JUnit reporter), ingested by the kit. -->
+<testsuites name="ui">
+  <testsuite name="settings.spec.ts" tests="2" failures="0">
+    <testcase classname="settings" name="admin sees appearance section" time="1.20"/>
+    <testcase classname="settings" name="regular user does not see admin section" time="0.95"/>
+  </testsuite>
+</testsuites>

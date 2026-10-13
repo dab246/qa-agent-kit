@@ -1,0 +1,8 @@
+schemaVersion: 1
+results:
+  - tcId: TC-SET-001
+    status: PASS
+    tester: qa-tester
+    executedAt: "2026-10-12T09:30:00Z"
+    environment: test
+    evidence: [screenshots/TC-SET-001.png]

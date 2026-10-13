@@ -1,0 +1,155 @@
+{
+  "$id": "https://qa-agent-kit.local/schemas/release-policy.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "policyVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requiredTests": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blockOnStatuses": {
+      "default": [
+        "FAIL",
+        "BLOCKED",
+        "INCONCLUSIVE",
+        "SKIPPED"
+      ],
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "PASS",
+          "FAIL",
+          "BLOCKED",
+          "INCONCLUSIVE",
+          "SKIPPED",
+          "NOT_APPLICABLE"
+        ]
+      }
+    },
+    "optionalFailures": {
+      "default": "warn",
+      "type": "string",
+      "enum": [
+        "warn",
+        "block"
+      ]
+    },
+    "criticalAlwaysBlocks": {
+      "default": true,
+      "type": "boolean"
+    },
+    "requireEvidence": {
+      "default": true,
+      "type": "boolean"
+    },
+    "requireSourceApproval": {
+      "default": true,
+      "type": "boolean"
+    },
+    "requireCleanupSuccess": {
+      "default": true,
+      "type": "boolean"
+    },
+    "requireResultsForCommit": {
+      "default": true,
+      "type": "boolean"
+    },
+    "lifecycle": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "requireIntakeAccepted": {
+          "default": true,
+          "type": "boolean"
+        },
+        "requireCostValueGo": {
+          "default": true,
+          "type": "boolean"
+        },
+        "requireManualE2EPass": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "lanes": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "required": {
+            "default": true,
+            "type": "boolean"
+          },
+          "minTests": {
+            "default": 1,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "exceptions": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "testKey": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "approvedBy": {
+            "type": "string",
+            "minLength": 1
+          },
+          "commitSha": {
+            "type": "string",
+            "minLength": 7
+          },
+          "expiresAt": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "testKey",
+          "reason",
+          "approvedBy",
+          "commitSha",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "policyVersion"
+  ],
+  "additionalProperties": false
+}

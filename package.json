@@ -1,0 +1,40 @@
+{
+  "name": "qa-agent-kit",
+  "version": "0.1.0",
+  "description": "Evidence-driven QA Agent Kit: lifecycle routing, deterministic permission testing, evidence registry and release gate, with advisory AI planning/triage.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "private": true,
+  "bin": {
+    "qa-agent-kit": "dist/cli/main.js"
+  },
+  "files": [
+    "dist",
+    "schemas",
+    "examples",
+    "prompts"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "schemas": "npm run build && node scripts/generate-schemas.mjs",
+    "check": "npm run typecheck && npm test && npm run build",
+    "demo": "npm run build && node scripts/demo.mjs",
+    "demo:bug": "npm run build && node scripts/demo.mjs --bug"
+  },
+  "dependencies": {
+    "fast-xml-parser": "5.11.2",
+    "yaml": "2.9.1",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.0",
+    "typescript": "7.0.2",
+    "vitest": "5.0.2"
+  }
+}

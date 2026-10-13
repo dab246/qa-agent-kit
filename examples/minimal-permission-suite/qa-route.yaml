@@ -1,0 +1,18 @@
+# S0 route record: written by the QA Lead for this change.
+schemaVersion: 1
+routeId: settings-hardening
+path: B
+owner: qa-lead
+scope: Settings and project access control
+risk: high
+lanes: [permission, ui]
+gaps:
+  - No NFR pack selected for this slice (cost/value decision).
+intake:
+  status: ACCEPTED
+  decidedBy: qa-lead
+  decidedAt: "2026-10-01"
+costValue:
+  decision: GO
+  decidedBy: qa-lead
+  rationale: Access-control change on a high-risk area.

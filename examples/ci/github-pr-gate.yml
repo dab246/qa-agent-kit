@@ -1,0 +1,52 @@
+# Copy to .github/workflows/qa-gate.yml in the repository under test and mark
+# the "qa-gate" check as required in branch protection.
+name: qa-gate
+
+on:
+  # Never pull_request_target: PR code must not run with the base repo's secrets.
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+
+# A newer push supersedes the running check, so a stale run cannot report for the current head.
+concurrency:
+  group: qa-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  qa-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # One environment holds the test-only credentials; protect it with required reviewers if needed.
+    environment: qa-test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Bind the run to the exact PR head, with history for the change-impact diff.
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - run: npm ci --ignore-scripts
+      # Deploy or start the system under test for this commit here (test environment only).
+      - name: QA release gate
+        run: npx qa-agent-kit run --config qa/qa-agent-kit.yaml --ci github --summary
+        env:
+          QA_TARGET_URL: ${{ vars.QA_TARGET_URL }}
+          QA_REGULAR_USER: ${{ secrets.QA_REGULAR_USER }}
+          QA_REGULAR_PASSWORD: ${{ secrets.QA_REGULAR_PASSWORD }}
+          QA_OTHER_USER: ${{ secrets.QA_OTHER_USER }}
+          QA_OTHER_PASSWORD: ${{ secrets.QA_OTHER_PASSWORD }}
+          QA_ADMIN_USER: ${{ secrets.QA_ADMIN_USER }}
+          QA_ADMIN_PASSWORD: ${{ secrets.QA_ADMIN_PASSWORD }}
+      # Sanitized evidence is uploaded even when the gate fails; access follows repository permissions.
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: qa-gate-${{ github.event.pull_request.head.sha }}
+          path: qa/artifacts/qa
+          retention-days: 14

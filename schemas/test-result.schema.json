@@ -1,0 +1,324 @@
+{
+  "$id": "https://qa-agent-kit.local/schemas/test-result.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "runId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lane": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "suiteId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "suiteVersion": {
+      "type": [
+        "string",
+        "number"
+      ]
+    },
+    "testId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string"
+    },
+    "required": {
+      "type": "boolean"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PASS",
+        "FAIL",
+        "BLOCKED",
+        "INCONCLUSIVE",
+        "SKIPPED",
+        "NOT_APPLICABLE"
+      ]
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "PRIVILEGE_ESCALATION",
+        "DATA_DISCLOSURE",
+        "UNEXPECTED_DENIAL",
+        "STATUS_MISMATCH",
+        "ERROR_CODE_MISMATCH",
+        "ASSERTION_FAILED",
+        "TEST_FAILED",
+        "TIMEOUT",
+        "EXECUTION_ERROR",
+        "SEED_FAILED",
+        "ACTOR_UNAVAILABLE",
+        "ACTOR_MISMATCH",
+        "CANCELLED",
+        "NO_EXPECTATION",
+        "UNRESOLVED_REFERENCE",
+        "BODY_INCOMPLETE",
+        "STOPPED_AFTER_CRITICAL",
+        "SOURCES_NOT_APPROVED",
+        "SKIPPED_BY_RUNNER"
+      ]
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "critical",
+        "high",
+        "normal"
+      ]
+    },
+    "actorRef": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string"
+    },
+    "operationId": {
+      "type": "string"
+    },
+    "resourceRef": {
+      "type": "string"
+    },
+    "expected": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "http"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 100,
+                  "maximum": 599
+                },
+                {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 100,
+                    "maximum": 599
+                  }
+                }
+              ]
+            },
+            "assertions": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "json-equals"
+                      },
+                      "path": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "expected": {}
+                    },
+                    "required": [
+                      "kind",
+                      "path",
+                      "expected"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "json-exists"
+                      },
+                      "path": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "path"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "json-not-exists"
+                      },
+                      "path": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "path"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "status",
+            "assertions"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "error"
+            },
+            "code": {
+              "type": "string",
+              "minLength": 1
+            },
+            "assertions": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "json-equals"
+                      },
+                      "path": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "expected": {}
+                    },
+                    "required": [
+                      "kind",
+                      "path",
+                      "expected"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "json-exists"
+                      },
+                      "path": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "path"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "json-not-exists"
+                      },
+                      "path": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "path"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "code",
+            "assertions"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "actual": {
+      "type": "object",
+      "properties": {
+        "httpStatus": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "errorCode": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "startedAt": {
+      "type": "string"
+    },
+    "finishedAt": {
+      "type": "string"
+    },
+    "durationMs": {
+      "type": "number",
+      "minimum": 0
+    },
+    "evidenceRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidenceError": {
+      "type": "string"
+    },
+    "failureReason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "runId",
+    "lane",
+    "suiteId",
+    "testId",
+    "required",
+    "status",
+    "severity",
+    "startedAt",
+    "finishedAt",
+    "durationMs",
+    "evidenceRefs"
+  ],
+  "additionalProperties": false
+}

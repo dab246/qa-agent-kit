@@ -1,0 +1,130 @@
+{
+  "$id": "https://qa-agent-kit.local/schemas/source-manifest.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "manifestId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "sources": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "requirement",
+              "policy",
+              "api-contract",
+              "test-pack",
+              "design",
+              "other"
+            ]
+          },
+          "revision": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "VERIFIED",
+              "ASSUMPTION",
+              "OBSOLETE",
+              "UNVERIFIED"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "revision",
+          "status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "assumptions": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          },
+          "statement": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "resolved": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "statement",
+          "resolved"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "approval": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "APPROVED",
+            "PENDING",
+            "REJECTED"
+          ]
+        },
+        "approvedBy": {
+          "type": "string"
+        },
+        "approvedAt": {
+          "type": "string"
+        },
+        "reference": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "manifestId",
+    "sources",
+    "approval"
+  ],
+  "additionalProperties": false
+}

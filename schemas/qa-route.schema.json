@@ -1,0 +1,115 @@
+{
+  "$id": "https://qa-agent-kit.local/schemas/qa-route.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "routeId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scope": {
+      "type": "string"
+    },
+    "risk": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
+    },
+    "lanes": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      }
+    },
+    "gaps": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "intake": {
+      "type": "object",
+      "properties": {
+        "decidedBy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "decidedAt": {
+          "type": "string"
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "ACCEPTED",
+            "PENDING",
+            "REJECTED"
+          ]
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "costValue": {
+      "type": "object",
+      "properties": {
+        "decidedBy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "decidedAt": {
+          "type": "string"
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "GO",
+            "PENDING",
+            "NO_GO"
+          ]
+        }
+      },
+      "required": [
+        "decision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "routeId",
+    "path",
+    "owner",
+    "risk",
+    "lanes",
+    "intake",
+    "costValue"
+  ],
+  "additionalProperties": false
+}

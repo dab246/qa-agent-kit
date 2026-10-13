@@ -1,0 +1,114 @@
+{
+  "$id": "https://qa-agent-kit.local/schemas/triage-report.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "runId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generatedBy": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "promptVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "model",
+        "promptVersion"
+      ],
+      "additionalProperties": false
+    },
+    "findings": {
+      "maxItems": 500,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "findingId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "possible-authorization-regression",
+              "possible-data-disclosure",
+              "unexpected-denial",
+              "expectation-mismatch",
+              "environment-or-setup",
+              "missing-expectation",
+              "possible-flakiness",
+              "lane-test-failure",
+              "not-executed"
+            ]
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "supportingTestKeys": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "evidenceRefs": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendedNextSteps": {
+            "default": [],
+            "maxItems": 10,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 500
+            }
+          }
+        },
+        "required": [
+          "findingId",
+          "category",
+          "confidence",
+          "summary",
+          "supportingTestKeys"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "runId",
+    "generatedBy",
+    "findings"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,93 @@
+schemaVersion: 1
+matrixId: settings-permissions
+version: 1
+area: settings
+description: Settings and project ownership rules from the authorization policy.
+
+sourceRefs:
+  - id: authorization-policy
+    revision: "2026-10-01"
+
+actors:
+  - ref: regular-user
+    role: regular-user
+  - ref: other-user
+    role: regular-user
+  - ref: administrator
+    role: administrator
+  - ref: anonymous
+    role: anonymous
+
+probes:
+  - id: regular-user-read-own-settings
+    title: A regular user reads their own settings
+    actorRef: regular-user
+    operationId: settings.read-own
+    expected:
+      kind: http
+      status: 200
+    severity: normal
+
+  - id: regular-user-update-admin-settings
+    title: A regular user cannot change global settings
+    actorRef: regular-user
+    operationId: settings.admin.update
+    input:
+      theme: dark
+    expected:
+      kind: http
+      status: 403
+      assertions:
+        # A denial must not echo the protected settings back.
+        - kind: json-not-exists
+          path: settings
+    severity: critical
+
+  - id: administrator-update-admin-settings
+    title: An administrator changes global settings
+    actorRef: administrator
+    operationId: settings.admin.update
+    input:
+      theme: light
+    expected:
+      kind: http
+      status: 200
+
+  - id: anonymous-read-settings
+    title: Anonymous callers are rejected
+    actorRef: anonymous
+    operationId: settings.read-own
+    expected:
+      kind: http
+      status: 401
+    severity: critical
+
+  - id: owner-read-own-project
+    title: An owner reads their project
+    actorRef: regular-user
+    operationId: project.read
+    input:
+      projectId: "{{fixture.user-project.id}}"
+    fixtureRefs: [user-project]
+    expected:
+      kind: http
+      status: 200
+      assertions:
+        - kind: json-equals
+          path: id
+          expected: "{{fixture.user-project.id}}"
+
+  - id: other-user-read-foreign-project
+    title: Another user cannot read someone else's project
+    actorRef: other-user
+    operationId: project.read
+    input:
+      projectId: "{{fixture.user-project.id}}"
+    fixtureRefs: [user-project]
+    expected:
+      kind: http
+      status: 403
+      assertions:
+        - kind: json-not-exists
+          path: name
+    severity: critical

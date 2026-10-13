@@ -1,0 +1,297 @@
+{
+  "$id": "https://qa-agent-kit.local/schemas/http-target.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "baseUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "baseUrlEnv": {
+      "type": "string",
+      "pattern": "^[A-Z_][A-Z0-9_]{0,127}$"
+    },
+    "defaultHeaders": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "operations": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "GET",
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "format": "starts_with",
+            "pattern": "^\\/.*"
+          },
+          "query": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "graphql": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string",
+                "minLength": 1
+              },
+              "operationName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "query"
+            ],
+            "additionalProperties": false
+          },
+          "errorCodePath": {
+            "type": "string"
+          },
+          "sideEffect": {
+            "default": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "method",
+          "path"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "actors": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          },
+          "auth": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "none"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "bearer-env"
+                  },
+                  "tokenEnv": {
+                    "type": "string",
+                    "pattern": "^[A-Z_][A-Z0-9_]{0,127}$"
+                  },
+                  "header": {
+                    "default": "authorization",
+                    "type": "string"
+                  },
+                  "scheme": {
+                    "default": "Bearer",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "tokenEnv"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "login"
+                  },
+                  "operationId": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                  },
+                  "usernameEnv": {
+                    "type": "string",
+                    "pattern": "^[A-Z_][A-Z0-9_]{0,127}$"
+                  },
+                  "passwordEnv": {
+                    "type": "string",
+                    "pattern": "^[A-Z_][A-Z0-9_]{0,127}$"
+                  },
+                  "otpEnv": {
+                    "type": "string",
+                    "pattern": "^[A-Z_][A-Z0-9_]{0,127}$"
+                  },
+                  "usernameField": {
+                    "default": "username",
+                    "type": "string"
+                  },
+                  "passwordField": {
+                    "default": "password",
+                    "type": "string"
+                  },
+                  "otpField": {
+                    "default": "otp",
+                    "type": "string"
+                  },
+                  "tokenPath": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "header": {
+                    "default": "authorization",
+                    "type": "string"
+                  },
+                  "scheme": {
+                    "default": "Bearer",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "operationId",
+                  "usernameEnv",
+                  "passwordEnv",
+                  "tokenPath"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "required": [
+          "role",
+          "auth"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "fixtures": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "seed": {
+            "type": "object",
+            "properties": {
+              "operationId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              "actorRef": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              "input": {
+                "default": {},
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              },
+              "capture": {
+                "default": {},
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "operationId",
+              "actorRef"
+            ],
+            "additionalProperties": false
+          },
+          "cleanup": {
+            "type": "object",
+            "properties": {
+              "operationId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              "actorRef": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              "input": {
+                "default": {},
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              }
+            },
+            "required": [
+              "operationId",
+              "actorRef"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "seed"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "operations",
+    "actors"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,68 @@
+{
+  "$id": "https://qa-agent-kit.local/schemas/manual-results.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "results": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tcId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PASS",
+              "FAIL",
+              "BLOCKED",
+              "NOT_RUN"
+            ]
+          },
+          "tester": {
+            "type": "string",
+            "minLength": 1
+          },
+          "executedAt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "commitSha": {
+            "type": "string"
+          },
+          "environment": {
+            "type": "string"
+          },
+          "evidence": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "tcId",
+          "status",
+          "tester",
+          "executedAt"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schemaVersion"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,59 @@
+# Entry point of a project's QA setup. Paths are relative to this file.
+schemaVersion: 1
+
+project:
+  id: demo-app
+  environment: test
+
+safety:
+  # The kit refuses to run anywhere else (e.g. production).
+  allowedEnvironments: [local, test, staging]
+  allowedHosts: [127.0.0.1, localhost]
+
+sources:
+  manifest: source-manifest.yaml
+
+routing:
+  route: qa-route.yaml
+  paths:
+    A: { description: Permission-only change, lanes: [permission] }
+    B: { description: Permission and UI change, lanes: [permission, ui] }
+    C: { description: Full regression, lanes: [permission, ui, e2e, nfr] }
+
+permission:
+  target: target.yaml
+  matrices:
+    - matrices/settings-permissions.yaml
+  execution:
+    defaultTimeoutMs: 10000
+    cleanupTimeoutMs: 30000
+    stopOnCriticalViolation: false
+
+testPacks:
+  files: [test-packs/settings.md]
+  manualResults: manual-results.yaml
+
+lanes:
+  ui:
+    junit: [reports/ui-junit.xml]
+    required: true
+
+impact:
+  rules:
+    - paths: ["src/settings/**", "src/auth/**", "src/projects/**"]
+      matrices: [settings-permissions]
+      lanes: [permission]
+    - paths: ["docs/**", "**/*.md"]
+  alwaysRun: []
+  onUnmatched: run-all
+
+evidence:
+  directory: ../../artifacts/qa
+  includeResponseBodies: false
+
+releaseGate:
+  policy: release-policy.yaml
+
+ai:
+  enabled: false
+  proposalsDirectory: proposals/pending

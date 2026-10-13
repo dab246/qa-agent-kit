@@ -1,0 +1,21 @@
+schemaVersion: 1
+policyVersion: "2026.10-1"
+blockOnStatuses: [FAIL, BLOCKED, INCONCLUSIVE, SKIPPED]
+optionalFailures: warn
+criticalAlwaysBlocks: true
+requireEvidence: true
+requireSourceApproval: true
+requireCleanupSuccess: true
+requireResultsForCommit: true
+lifecycle:
+  requireIntakeAccepted: true
+  requireCostValueGo: true
+  requireManualE2EPass: true
+lanes:
+  permission:
+    required: true
+    minTests: 1
+  ui:
+    required: true
+    minTests: 1
+exceptions: []

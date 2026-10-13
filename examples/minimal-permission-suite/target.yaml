@@ -1,0 +1,72 @@
+# How the kit talks to the system under test. Data only: operations are an
+# allowlist, credentials come from environment variables (CI secrets).
+schemaVersion: 1
+baseUrlEnv: QA_TARGET_URL
+
+operations:
+  auth.login:
+    method: POST
+    path: /auth/login
+    sideEffect: false
+  settings.read-own:
+    method: GET
+    path: /settings/me
+    sideEffect: false
+  settings.admin.update:
+    method: PUT
+    path: /admin/settings
+  project.create:
+    method: POST
+    path: /projects
+  project.read:
+    method: GET
+    path: /projects/{projectId}
+    sideEffect: false
+  project.delete:
+    method: DELETE
+    path: /projects/{projectId}
+
+actors:
+  regular-user:
+    role: regular-user
+    auth:
+      kind: login
+      operationId: auth.login
+      usernameEnv: QA_REGULAR_USER
+      passwordEnv: QA_REGULAR_PASSWORD
+      tokenPath: accessToken
+  other-user:
+    role: regular-user
+    auth:
+      kind: login
+      operationId: auth.login
+      usernameEnv: QA_OTHER_USER
+      passwordEnv: QA_OTHER_PASSWORD
+      tokenPath: accessToken
+  administrator:
+    role: administrator
+    auth:
+      kind: login
+      operationId: auth.login
+      usernameEnv: QA_ADMIN_USER
+      passwordEnv: QA_ADMIN_PASSWORD
+      tokenPath: accessToken
+  anonymous:
+    role: anonymous
+    auth:
+      kind: none
+
+fixtures:
+  user-project:
+    seed:
+      operationId: project.create
+      actorRef: regular-user
+      input:
+        name: "qa-{{run.id}}"
+      capture:
+        id: id
+    cleanup:
+      operationId: project.delete
+      actorRef: regular-user
+      input:
+        projectId: "{{fixture.user-project.id}}"
